@@ -1,0 +1,21 @@
+# Игнорируем всё в корне
+/*
+
+# Разрешаем только нужное
+!/.gitignore
+!/frontend
+!/backend
+!/.env.example
+!/docker-compose.prod.yml
+
+# Внутри разрешённых каталогов — отсекаем мусор
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+node_modules/
+.DS_Store
+*.log
+dist/
+build/
+.next/

@@ -1,0 +1,31 @@
+# Self-contained production compose.
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Differences from the dev compose:
+#   - Frontend port is bound to 127.0.0.1 only (host nginx terminates TLS).
+#   - No code bind-mounts — the image is the source of truth.
+#   - Backend runs without --reload (uses the Dockerfile's CMD).
+
+services:
+  backend:
+    build: ./backend
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_PRICE_INPUT=${OPENAI_PRICE_INPUT:-0.40}
+      - OPENAI_PRICE_CACHED_INPUT=${OPENAI_PRICE_CACHED_INPUT:-0.10}
+      - OPENAI_PRICE_OUTPUT=${OPENAI_PRICE_OUTPUT:-1.60}
+      - WHOIS_TIMEOUT=${WHOIS_TIMEOUT:-30}
+      - WHOIS_CONCURRENCY=${WHOIS_CONCURRENCY:-8}
+      - WHOIS_CACHE_TTL=${WHOIS_CACHE_TTL:-3600}
+      - WHOIS_PROXY=${WHOIS_PROXY:-}
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-18782}:80"
+    depends_on:
+      - backend
+    restart: always

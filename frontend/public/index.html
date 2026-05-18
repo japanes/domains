@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI-генератор доменних імен — Imena.ua</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #03a9f4;
+    --accent-hover: #0299dc;
+    --accent-soft: #e3f4fd;
+    --accent-tint: #f4fbff;
+    --ink: #0a0a0a;
+    --ink-2: #3a3a3a;
+    --ink-3: #6b6b6b;
+    --ink-4: #a3a3a3;
+    --line: #ececec;
+    --line-2: #f4f4f4;
+    --bg: #ffffff;
+    --green: #16a34a;
+    --green-soft: #e7f7ee;
+    --red: #b91c1c;
+    --red-soft: #fbeaea;
+    --amber: #b45309;
+    --amber-soft: #fef3c7;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  ::selection { background: var(--accent); color: #fff; }
+
+  /* ====== Nav ====== */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 40px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 50;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+  }
+  .logo img {
+    height: 28px;
+    width: auto;
+    display: block;
+  }
+  .nav-right { display: flex; gap: 28px; align-items: center; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    color: var(--ink-2);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-phone {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  .lang-switch {
+    display: inline-flex;
+    background: var(--line-2);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 0;
+  }
+  .lang-switch button {
+    background: none;
+    border: none;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+  }
+  .lang-switch button.active {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .nav-cta {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .nav-cta:hover { background: #1f1f1f; }
+
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ====== Hero ====== */
+  .hero {
+    padding: 56px 0 56px;
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .eyebrow .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  h1 {
+    font-size: 56px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin: 0 0 20px;
+    color: var(--ink);
+  }
+  h1 .accent {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: 500;
+  }
+  .lede {
+    font-size: 19px;
+    color: var(--ink-3);
+    max-width: 580px;
+    margin: 0 auto 48px;
+    text-wrap: pretty;
+  }
+
+  /* ====== Form ====== */
+  .form-card {
+    background: #fff;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 8px;
+    text-align: left;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 12px 40px -12px rgba(3,169,244,0.12);
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .form-card:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 0 0 4px var(--accent-soft);
+  }
+  .textarea-wrap {
+    padding: 18px 20px 6px;
+  }
+  textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    font-size: 17px;
+    line-height: 1.45;
+    color: var(--ink);
+    background: transparent;
+    min-height: 90px;
+  }
+  textarea::placeholder { color: var(--ink-4); }
+
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 10px 20px;
+    border-top: 1px solid var(--line-2);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-4);
+    margin-right: 4px;
+    font-weight: 500;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink-2);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.12s;
+  }
+  .chip:hover { border-color: var(--ink-4); }
+  .chip.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+  .chip.tld.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .generate-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0 22px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    box-sizing: border-box;
+    line-height: 1;
+    transition: background 0.12s;
+  }
+  .generate-btn:hover:not(:disabled) { background: var(--accent-hover); }
+  .generate-btn:disabled {
+    cursor: wait;
+    background: var(--accent);
+    color: #fff;
+  }
+  .generate-btn svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  .generate-btn .spinner { display: none; }
+  .generate-btn.btn-loading .sparkle { display: none; }
+  .generate-btn.btn-loading .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    animation: spin 0.85s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .examples {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--accent-tint);
+    border: 1px solid var(--accent-soft);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+  .examples > span {
+    margin-right: 6px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.01em;
+  }
+  .examples button {
+    background: #fff;
+    border: 1px solid var(--accent-soft);
+    padding: 8px 16px;
+    border-radius: 999px;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .examples button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+  }
+
+  /* ====== Results ====== */
+  .results {
+    padding: 24px 0 96px;
+    scroll-margin-top: 88px;
+  }
+  .results-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 0 4px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .results-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .results-title b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .results-actions { display: flex; gap: 8px; align-items: center; }
+
+  .cost-line {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    padding: 0 4px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-family: 'Geist Mono', monospace;
+  }
+  .cost-line b { color: var(--ink); font-weight: 600; }
+  .sort-select {
+    background: none;
+    border: 1px solid var(--line);
+    padding: 6px 28px 6px 10px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink-2);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+  }
+
+  .name-block {
+    padding: 20px 0 24px;
+  }
+  .name-block + .name-block {
+    border-top: 1px dashed var(--line);
+  }
+  .name-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .name-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .name-desc {
+    font-size: 14px;
+    color: var(--ink-3);
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .availability-summary {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .availability-summary .count {
+    font-weight: 600; color: var(--green); font-size: 14px;
+  }
+
+  .domains-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .domain-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--line-2);
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px;
+  }
+  .domain-row.available {
+    background: var(--accent-tint);
+    border: 1px solid var(--accent-soft);
+  }
+  .domain-row.taken { opacity: 0.55; }
+  .domain-row.unknown {
+    background: var(--amber-soft);
+    border: 1px solid #fde68a;
+  }
+  .domain-name {
+    font-weight: 500;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .domain-name .tld { color: var(--accent); }
+  .domain-row.taken .domain-name .tld { color: var(--ink-4); }
+  .domain-row.unknown .domain-name .tld { color: var(--amber); }
+  .domain-action { display: flex; align-items: center; gap: 8px; }
+  .price {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .buy-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .buy-btn:hover { background: var(--accent-hover); }
+  .taken-label, .unknown-label {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    color: var(--ink-4);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .unknown-label { color: var(--amber); }
+
+  /* ====== States ====== */
+  .empty, .loading, .error {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--ink-3);
+  }
+  .empty-icon {
+    width: 56px; height: 56px;
+    background: var(--accent-tint);
+    border-radius: 14px;
+    display: grid; place-items: center;
+    margin: 0 auto 16px;
+    color: var(--accent);
+  }
+  .empty h3 {
+    color: var(--ink);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .empty p { margin: 0; font-size: 14px; }
+
+  .loading-grid { display: flex; flex-direction: column; gap: 10px; }
+  .loading-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--accent);
+  }
+  .loading-row svg {
+    width: 16px;
+    height: 16px;
+    animation: spin 0.85s linear infinite;
+    flex: none;
+  }
+  .loading-row span {
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .skeleton {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    height: 84px;
+    background: linear-gradient(90deg, #fff 0%, var(--line-2) 50%, #fff 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ====== Footer ====== */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ink-4);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer a { color: var(--ink-3); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+
+  /* ====== Responsive ====== */
+  @media (max-width: 860px) {
+    .nav-links a:not(.nav-phone), .nav-phone { display: none; }
+    .nav-right { gap: 12px; }
+  }
+  @media (max-width: 720px) {
+    .nav { padding: 14px 18px; }
+    .nav-links { display: none; }
+    .nav-right { gap: 10px; }
+    .logo img { height: 24px; }
+    .nav-cta { padding: 8px 12px; font-size: 13px; }
+    .lang-switch button { padding: 5px 8px; font-size: 11px; }
+
+    .container { padding: 0 18px; }
+    .hero { padding: 44px 0 28px; }
+    .eyebrow { font-size: 12px; padding: 5px 10px; margin-bottom: 18px; }
+    h1 { font-size: 34px; letter-spacing: -0.025em; }
+    .lede { font-size: 15px; margin-bottom: 28px; }
+
+    .form-card { border-radius: 16px; }
+    .textarea-wrap { padding: 14px 16px 4px; }
+    textarea { font-size: 16px; min-height: 140px; }
+    .form-footer {
+      padding: 10px 10px 10px 16px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .form-footer > div { gap: 12px !important; }
+    .filter-group {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .filter-label { width: 100%; margin: 0 0 2px; }
+    .chip { font-size: 12px; padding: 5px 10px; }
+    .generate-btn { width: 100%; height: 46px; padding: 0 22px; }
+
+    .examples {
+      justify-content: flex-start;
+      margin-top: 18px;
+      padding: 14px 16px;
+      font-size: 14px;
+      gap: 8px;
+    }
+    .examples > span { width: 100%; margin-right: 0; margin-bottom: 2px; }
+    .examples button { font-size: 14px; padding: 7px 13px; }
+
+    .results { padding: 16px 0 64px; }
+    .results-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .results-title { font-size: 12px; }
+    .name-block { padding: 16px 0 18px; }
+    .name-title { font-size: 18px; }
+    .name-desc { font-size: 13px; }
+    .availability-summary { font-size: 12px; }
+    .availability-summary .count { font-size: 13px; }
+    .domain-row { padding: 9px 12px; font-size: 13px; }
+    .price { font-size: 11px; }
+    .buy-btn { padding: 4px 9px; font-size: 11px; }
+
+    footer {
+      padding: 18px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+    }
+    footer > div:last-child { gap: 14px !important; }
+  }
+
+  @media (max-width: 400px) {
+    .domain-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .domain-action {
+      align-self: flex-start;
+    }
+  }
+
+  @media (max-width: 380px) {
+    h1 { font-size: 30px; }
+    .nav-cta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="https://www.imena.ua/ua" class="logo" aria-label="Imena.ua">
+    <img src="/logo.svg" alt="Imena.ua" />
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="https://www.imena.ua/ua/domains" data-i18n="nav.domains">Домени</a>
+      <a href="https://www.imena.ua/ua/hosting" data-i18n="nav.hosting">Хостинг</a>
+      <a href="https://www.imena.ua/ua/support" data-i18n="nav.help">Допомога</a>
+      <a href="tel:+380442010102" class="nav-phone">+380 (44) 201-01-02</a>
+    </div>
+    <div class="lang-switch" id="langSwitch">
+      <button data-lang="uk" class="active">УКР</button>
+      <button data-lang="ru">РУС</button>
+      <button data-lang="en">ENG</button>
+    </div>
+    <button class="nav-cta" data-i18n="nav.signin">Увійти</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <h1>
+      <span data-i18n="hero.title1">Знайдіть ідеальне ім'я</span><br/>
+      <span data-i18n="hero.title2">для</span> <span class="accent" data-i18n="hero.title3">вашого бізнесу</span>
+    </h1>
+    <p class="lede" data-i18n="hero.lede">Опишіть ідею в кількох реченнях — отримайте 10 назв із перевіреною доступністю доменів у потрібних зонах.</p>
+
+    <div class="form-card" id="formCard">
+      <div class="textarea-wrap">
+        <textarea id="prompt" rows="3" data-i18n-attr="placeholder" data-i18n-key="form.placeholder"></textarea>
+      </div>
+      <div class="form-footer">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div class="filter-group">
+            <span class="filter-label" data-i18n="form.zones">Зони</span>
+            <button class="chip tld active" data-tld=".ua">.ua</button>
+            <button class="chip tld active" data-tld=".com.ua">.com.ua</button>
+            <button class="chip tld" data-tld=".kyiv.ua">.kyiv.ua</button>
+            <button class="chip tld" data-tld=".kiev.ua">.kiev.ua</button>
+            <button class="chip tld" data-tld=".net.ua">.net.ua</button>
+            <button class="chip tld" data-tld=".org.ua">.org.ua</button>
+            <button class="chip tld active" data-tld=".in.ua">.in.ua</button>
+            <button class="chip tld" data-tld=".info">.info</button>
+            <button class="chip tld" data-tld=".biz">.biz</button>
+            <button class="chip tld active" data-tld=".com">.com</button>
+            <button class="chip tld active" data-tld=".net">.net</button>
+            <button class="chip tld" data-tld=".org">.org</button>
+          </div>
+        </div>
+        <button class="generate-btn" id="generateBtn">
+          <svg class="sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+          <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity="0.25"/><path d="M21 12a9 9 0 0 1-9 9"/></svg>
+          <span data-i18n="form.generate">Згенерувати</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="examples">
+      <span data-i18n="examples.label">Спробуйте:</span>
+      <button data-example-key="coffee" data-i18n="examples.coffee">Кав'ярня</button>
+      <button data-example-key="saas" data-i18n="examples.saas">SaaS для команд</button>
+      <button data-example-key="ceramics" data-i18n="examples.ceramics">Студія кераміки</button>
+      <button data-example-key="fintech" data-i18n="examples.fintech">Фінтех для підлітків</button>
+    </div>
+  </div>
+</section>
+
+<section class="results">
+  <div class="container">
+    <div id="resultsArea"></div>
+  </div>
+</section>
+
+<footer>
+  <div data-i18n="footer.copy">© 2001—2026 Imena.ua · AI-генератор</div>
+  <div style="display: flex; gap: 20px;">
+    <a href="#" data-i18n="footer.terms">Умови</a>
+    <a href="#" data-i18n="footer.privacy">Конфіденційність</a>
+    <a href="#" data-i18n="footer.contact">Контакти</a>
+  </div>
+</footer>
+
+<script>
+// ============ i18n ============
+const I18N = {
+  uk: {
+    'nav.domains': 'Домени',
+    'nav.hosting': 'Хостинг',
+    'nav.help': 'Допомога',
+    'nav.signin': 'Увійти',
+    'hero.eyebrow': 'AI-генератор назв та доменів',
+    'hero.title1': 'Знайдіть ідеальне ім\'я',
+    'hero.title2': 'для',
+    'hero.title3': 'вашого бізнесу',
+    'hero.lede': 'Опишіть ідею в кількох реченнях — отримайте 10 назв із перевіреною доступністю доменів у потрібних зонах.',
+    'form.placeholder': 'Наприклад: онлайн-школа для дітей з іграми та творчими завданнями, аудиторія 6–12 років, дружній тон, акцент на безпеці...',
+    'form.zones': 'Зони',
+    'form.generate': 'Згенерувати',
+    'examples.label': 'Спробуйте:',
+    'examples.coffee': 'Кав\'ярня',
+    'examples.saas': 'SaaS для команд',
+    'examples.ceramics': 'Студія кераміки',
+    'examples.fintech': 'Фінтех для підлітків',
+    'footer.copy': '© 2001—2026 Imena.ua · AI-генератор',
+    'footer.terms': 'Умови',
+    'footer.privacy': 'Конфіденційність',
+    'footer.contact': 'Контакти',
+    'empty.title': 'Результати з\'являться тут',
+    'empty.desc': 'Опишіть ваш бізнес вище та натисніть «Згенерувати»',
+    'loading.title': 'Генеруємо назви та перевіряємо домени... це може зайняти декілька хвилин',
+    'error.title': 'Помилка генерації',
+    'error.desc': 'Спробуйте ще раз або переформулюйте опис.',
+    'results.found': 'Знайдено',
+    'results.names': 'назв',
+    'results.free': 'вільних доменів',
+    'results.sep': '·',
+    'results.outof': 'з',
+    'results.available': 'вільно',
+    'results.taken': 'Зайнятий',
+    'results.unknown': 'Не визначено',
+    'results.buy': 'До кошика',
+    'results.perYear': '/рік',
+    'sort.available': 'За доступністю',
+    'sort.short': 'За довжиною',
+    'sort.default': 'За замовчуванням',
+    'cost.label': 'Вартість OpenAI',
+    'cost.input': 'вхід',
+    'cost.cached': 'кеш',
+    'cost.output': 'вихід',
+    'cost.tokens': 'токенів',
+    'cost.rounds': 'запитів',
+    'alert.noTld': 'Оберіть хоча б одну доменну зону',
+    'alert.buy': 'Перехід до реєстрації: ',
+    'ex.coffee': 'Кав\'ярня третьої хвилі з акцентом на спешелті зерна, мінімалістичний дизайн, центр Києва',
+    'ex.saas': 'SaaS для управління завданнями в невеликих командах розробки, фокус на простоті та швидкості',
+    'ex.ceramics': 'Студія кераміки з курсами та продажем посуду ручної роботи, тепла атмосфера',
+    'ex.fintech': 'Фінтех-додаток для підлітків: перша картка, навчання фінансовій грамотності, батьківський контроль',
+  },
+  ru: {
+    'nav.domains': 'Домены',
+    'nav.hosting': 'Хостинг',
+    'nav.help': 'Помощь',
+    'nav.signin': 'Войти',
+    'hero.eyebrow': 'AI-генератор названий и доменов',
+    'hero.title1': 'Найдите идеальное имя',
+    'hero.title2': 'для',
+    'hero.title3': 'вашего бизнеса',
+    'hero.lede': 'Опишите идею в нескольких предложениях — получите 10 названий с проверенной доступностью доменов в нужных зонах.',
+    'form.placeholder': 'Например: онлайн-школа для детей с играми и творческими заданиями, аудитория 6–12 лет, дружелюбный тон, упор на безопасность...',
+    'form.zones': 'Зоны',
+    'form.generate': 'Сгенерировать',
+    'examples.label': 'Попробуйте:',
+    'examples.coffee': 'Кофейня',
+    'examples.saas': 'SaaS для команд',
+    'examples.ceramics': 'Студия керамики',
+    'examples.fintech': 'Финтех для подростков',
+    'footer.copy': '© 2001—2026 Imena.ua · AI-генератор',
+    'footer.terms': 'Условия',
+    'footer.privacy': 'Конфиденциальность',
+    'footer.contact': 'Контакты',
+    'empty.title': 'Результаты появятся здесь',
+    'empty.desc': 'Опишите ваш бизнес выше и нажмите «Сгенерировать»',
+    'loading.title': 'Генерируем названия и проверяем домены... это может занять несколько минут',
+    'error.title': 'Ошибка генерации',
+    'error.desc': 'Попробуйте ещё раз или переформулируйте описание.',
+    'results.found': 'Найдено',
+    'results.names': 'названий',
+    'results.free': 'свободных доменов',
+    'results.sep': '·',
+    'results.outof': 'из',
+    'results.available': 'свободно',
+    'results.taken': 'Занят',
+    'results.unknown': 'Не определено',
+    'results.buy': 'В корзину',
+    'results.perYear': '/год',
+    'sort.available': 'По доступности',
+    'sort.short': 'По длине',
+    'sort.default': 'По умолчанию',
+    'cost.label': 'Стоимость OpenAI',
+    'cost.input': 'вход',
+    'cost.cached': 'кеш',
+    'cost.output': 'выход',
+    'cost.tokens': 'токенов',
+    'cost.rounds': 'запросов',
+    'alert.noTld': 'Выберите хотя бы одну доменную зону',
+    'alert.buy': 'Переход к регистрации: ',
+    'ex.coffee': 'Кофейня третьей волны с акцентом на спешелти зёрна, минималистичный дизайн, в центре Киева',
+    'ex.saas': 'SaaS для управления задачами в небольших командах разработки, фокус на простоте и скорости',
+    'ex.ceramics': 'Студия керамики с курсами и продажей посуды ручной работы, тёплая атмосфера',
+    'ex.fintech': 'Финтех-приложение для подростков: первая карта, обучение финграмотности, родительский контроль',
+  },
+  en: {
+    'nav.domains': 'Domains',
+    'nav.hosting': 'Hosting',
+    'nav.help': 'Help',
+    'nav.signin': 'Sign in',
+    'hero.eyebrow': 'AI generator for names & domains',
+    'hero.title1': 'Find the perfect name',
+    'hero.title2': 'for',
+    'hero.title3': 'your business',
+    'hero.lede': 'Describe your idea in a few sentences — get 10 names with verified domain availability across the zones you want.',
+    'form.placeholder': 'For example: an online school for kids with games and creative tasks, audience 6–12, friendly tone, focus on safety...',
+    'form.zones': 'Zones',
+    'form.generate': 'Generate',
+    'examples.label': 'Try:',
+    'examples.coffee': 'Coffee shop',
+    'examples.saas': 'Team SaaS',
+    'examples.ceramics': 'Ceramics studio',
+    'examples.fintech': 'Teen fintech',
+    'footer.copy': '© 2001—2026 Imena.ua · AI generator',
+    'footer.terms': 'Terms',
+    'footer.privacy': 'Privacy',
+    'footer.contact': 'Contact',
+    'empty.title': 'Results will appear here',
+    'empty.desc': 'Describe your business above and hit "Generate"',
+    'loading.title': 'Generating names and checking domains... this may take a few minutes',
+    'error.title': 'Generation failed',
+    'error.desc': 'Please try again or rephrase your description.',
+    'results.found': 'Found',
+    'results.names': 'names',
+    'results.free': 'available domains',
+    'results.sep': '·',
+    'results.outof': 'of',
+    'results.available': 'available',
+    'results.taken': 'Taken',
+    'results.unknown': 'Unknown',
+    'results.buy': 'Add',
+    'results.perYear': '/yr',
+    'sort.available': 'By availability',
+    'sort.short': 'By length',
+    'sort.default': 'Default',
+    'cost.label': 'OpenAI cost',
+    'cost.input': 'in',
+    'cost.cached': 'cached',
+    'cost.output': 'out',
+    'cost.tokens': 'tokens',
+    'cost.rounds': 'requests',
+    'alert.noTld': 'Select at least one domain zone',
+    'alert.buy': 'Register: ',
+    'ex.coffee': 'A third-wave coffee shop focused on specialty beans, minimalist design, downtown',
+    'ex.saas': 'A task-management SaaS for small dev teams, focused on simplicity and speed',
+    'ex.ceramics': 'A ceramics studio with classes and handmade tableware sales, warm atmosphere',
+    'ex.fintech': 'A fintech app for teens: first card, financial literacy, parental controls',
+  }
+};
+
+// Prices from imena.ua/ua/domains/prices (annual registration, UAH).
+const PRICES_UAH = {
+  '.ua': '3 528 грн',
+  '.укр': '1 020 грн',
+  '.com.ua': '738 грн',
+  '.kyiv.ua': '657 грн',
+  '.kiev.ua': '657 грн',
+  '.net.ua': '525 грн',
+  '.org.ua': '549 грн',
+  '.in.ua': '603 грн',
+  '.com': '867 грн',
+  '.net': '978 грн',
+  '.org': '792 грн',
+  '.info': '1 509 грн',
+  '.biz': '1 356 грн',
+  '.app': '1 443 грн',
+  '.io': '4 395 грн',
+  '.co': '2 301 грн',
+  '.ai': '5 820 грн',
+  def: '—'
+};
+
+let currentLang = localStorage.getItem('lang') || 'uk';
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.uk[key] || key; }
+
+function applyI18n() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+    const attr = el.getAttribute('data-i18n-attr');
+    const key = el.getAttribute('data-i18n-key');
+    el.setAttribute(attr, t(key));
+  });
+  document.title = currentLang === 'en'
+    ? 'AI domain name generator — Imena.ua'
+    : currentLang === 'ru'
+    ? 'AI-генератор доменных имён — Imena.ua'
+    : 'AI-генератор доменних імен — Imena.ua';
+
+  if (state.results.length > 0) renderResults();
+  else renderEmpty();
+}
+
+// ============ State ============
+const state = {
+  tlds: ['.com.ua', '.ua', '.com', '.net', '.in.ua'],
+  loading: false,
+  results: [],
+  cost: null,
+  sort: 'available'
+};
+
+// ============ Lang switch ============
+document.querySelectorAll('#langSwitch button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#langSwitch button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentLang = b.dataset.lang;
+    localStorage.setItem('lang', currentLang);
+    applyI18n();
+  });
+});
+(function initLang() {
+  const btn = document.querySelector(`#langSwitch button[data-lang="${currentLang}"]`);
+  if (btn) {
+    document.querySelectorAll('#langSwitch button').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+  }
+})();
+
+// ============ Chips ============
+document.querySelectorAll('.chip.tld').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    const tld = btn.dataset.tld;
+    if (btn.classList.contains('active')) {
+      if (!state.tlds.includes(tld)) state.tlds.push(tld);
+    } else {
+      state.tlds = state.tlds.filter(x => x !== tld);
+    }
+  });
+});
+
+// ============ Examples ============
+document.querySelectorAll('.examples button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = 'ex.' + btn.dataset.exampleKey;
+    document.getElementById('prompt').value = t(key);
+    document.getElementById('prompt').focus();
+  });
+});
+
+// ============ Generate ============
+document.getElementById('generateBtn').addEventListener('click', generate);
+document.getElementById('prompt').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate();
+});
+
+async function generate() {
+  const prompt = document.getElementById('prompt').value.trim();
+  if (!prompt) {
+    document.getElementById('prompt').focus();
+    return;
+  }
+  if (state.tlds.length === 0) {
+    alert(t('alert.noTld'));
+    return;
+  }
+
+  state.loading = true;
+  renderLoading();
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.classList.add('btn-loading');
+
+  const resultsSection = document.querySelector('.results');
+  if (resultsSection) {
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        tlds: state.tlds,
+        lang: currentLang,
+        count: 10,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`API ${res.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const data = await res.json();
+    if (!data.names || data.names.length === 0) throw new Error('Empty');
+
+    state.results = data.names.map(n => ({
+      name: n.name,
+      tagline: n.tagline,
+      domains: n.domains.map(d => ({
+        tld: d.tld,
+        domain: d.domain,
+        status: d.status,
+        price: priceFor(d.tld),
+      })),
+    }));
+    state.cost = data.cost || null;
+
+    renderResults();
+  } catch (err) {
+    console.error(err);
+    renderError(err.message);
+  } finally {
+    state.loading = false;
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
+  }
+}
+
+function priceFor(tld) {
+  return PRICES_UAH[tld] || PRICES_UAH.def;
+}
+
+// ============ Render ============
+function renderEmpty() {
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="empty">
+      <div class="empty-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+      <h3>${t('empty.title')}</h3>
+      <p>${t('empty.desc')}</p>
+    </div>`;
+}
+
+function renderLoading() {
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="results-header">
+      <div class="loading-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity="0.25"/><path d="M21 12a9 9 0 0 1-9 9"/></svg>
+        <span>${t('loading.title')}</span>
+      </div>
+    </div>
+    <div class="loading-grid">
+      ${Array(6).fill('<div class="skeleton"></div>').join('')}
+    </div>`;
+}
+
+function renderError(detail) {
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="empty">
+      <div class="empty-icon" style="background: var(--red-soft); color: var(--red);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3>${t('error.title')}</h3>
+      <p>${t('error.desc')}</p>
+      ${detail ? `<p style="margin-top:8px; font-size:12px; color: var(--ink-4); font-family: 'Geist Mono', monospace;">${esc(detail)}</p>` : ''}
+    </div>`;
+}
+
+function renderResults() {
+  let results = [...state.results];
+  results.forEach(r => r.domains.forEach(d => d.price = priceFor(d.tld)));
+
+  if (state.sort === 'available') {
+    results.sort((a, b) => b.domains.filter(d => d.status === 'available').length - a.domains.filter(d => d.status === 'available').length);
+  } else if (state.sort === 'short') {
+    results.sort((a, b) => a.name.length - b.name.length);
+  }
+  const totalAvail = results.reduce((s, r) => s + r.domains.filter(d => d.status === 'available').length, 0);
+
+  const html = `
+    <div class="results-header">
+      <div class="results-title">
+        ${t('results.found')} <b>${results.length}</b> ${t('results.names')} ${t('results.sep')} <b>${totalAvail}</b> ${t('results.free')}
+      </div>
+      <div class="results-actions">
+        <select class="sort-select" id="sortSelect">
+          <option value="available" ${state.sort === 'available' ? 'selected' : ''}>${t('sort.available')}</option>
+          <option value="short" ${state.sort === 'short' ? 'selected' : ''}>${t('sort.short')}</option>
+          <option value="original" ${state.sort === 'original' ? 'selected' : ''}>${t('sort.default')}</option>
+        </select>
+      </div>
+    </div>
+    ${renderCost()}
+    <div class="name-list">
+      ${results.map((r, i) => renderBlock(r, i)).join('')}
+    </div>`;
+
+  document.getElementById('resultsArea').innerHTML = html;
+
+  document.getElementById('sortSelect').addEventListener('change', (e) => {
+    state.sort = e.target.value;
+    renderResults();
+  });
+  document.querySelectorAll('.buy-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      alert(t('alert.buy') + btn.dataset.domain);
+    });
+  });
+}
+
+function renderCost() {
+  const c = state.cost;
+  if (!c) return '';
+  const usd = '$' + Number(c.total_usd).toFixed(6);
+  return `
+    <div class="cost-line">
+      <span>${t('cost.label')}: <b>${usd}</b></span>
+      <span>${t('cost.input')} <b>${c.input_tokens}</b> ${t('cost.tokens')}</span>
+      ${c.cached_tokens ? `<span>${t('cost.cached')} <b>${c.cached_tokens}</b> ${t('cost.tokens')}</span>` : ''}
+      <span>${t('cost.output')} <b>${c.output_tokens}</b> ${t('cost.tokens')}</span>
+      <span><b>${c.rounds}</b> ${t('cost.rounds')}</span>
+    </div>`;
+}
+
+function renderBlock(r, i) {
+  const availableCount = r.domains.filter(d => d.status === 'available').length;
+  return `
+    <div class="name-block" data-i="${i}">
+      <div class="name-header">
+        <div class="name-title">${esc(r.name)}</div>
+        <div class="availability-summary">
+          <span class="count">${availableCount}</span>
+          <span>${t('results.outof')} ${r.domains.length} ${t('results.available')}</span>
+        </div>
+      </div>
+      <div class="name-desc">${esc(r.tagline)}</div>
+      <div class="domains-list">
+        ${r.domains.map(d => renderDomain(r.name, d)).join('')}
+      </div>
+    </div>`;
+}
+
+function renderDomain(name, d) {
+  const lower = name.toLowerCase();
+  let action;
+  if (d.status === 'available') {
+    action = `<span class="price">${d.price}${t('results.perYear')}</span><button class="buy-btn" data-domain="${lower}${d.tld}">${t('results.buy')}</button>`;
+  } else if (d.status === 'taken') {
+    action = `<span class="taken-label">
+               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+               ${t('results.taken')}
+             </span>`;
+  } else {
+    action = `<span class="unknown-label">
+               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+               ${t('results.unknown')}
+             </span>`;
+  }
+  return `
+    <div class="domain-row ${d.status}">
+      <span class="domain-name">${esc(lower)}<span class="tld">${d.tld}</span></span>
+      <div class="domain-action">${action}</div>
+    </div>`;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============ Init ============
+applyI18n();
+</script>
+
+</body>
+</html>
