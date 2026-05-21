@@ -439,6 +439,12 @@
     background: var(--amber-soft);
     border: 1px solid #fde68a;
   }
+  .domain-row.checking {
+    background: linear-gradient(90deg, var(--line-2) 0%, #fff 50%, var(--line-2) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    color: var(--ink-3);
+  }
   .domain-name {
     font-weight: 500;
     color: var(--ink);
@@ -449,6 +455,22 @@
   .domain-name .tld { color: var(--accent); }
   .domain-row.taken .domain-name .tld { color: var(--ink-4); }
   .domain-row.unknown .domain-name .tld { color: var(--amber); }
+  .domain-row.checking .domain-name { color: var(--ink-3); }
+  .domain-row.checking .domain-name .tld { color: var(--ink-4); }
+  .checking-label {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    color: var(--ink-4);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .checking-label svg {
+    width: 11px;
+    height: 11px;
+    animation: spin 0.85s linear infinite;
+  }
+  .name-block.fully-taken { opacity: 0.55; }
   .domain-action { display: flex; align-items: center; gap: 8px; }
   .price {
     font-family: 'Geist', sans-serif;
@@ -758,6 +780,7 @@ const I18N = {
     'results.available': 'вільно',
     'results.taken': 'Зайнятий',
     'results.unknown': 'Не визначено',
+    'results.checking': 'Перевіряємо…',
     'results.buy': 'До кошика',
     'results.perYear': '/рік',
     'sort.available': 'За доступністю',
@@ -811,6 +834,7 @@ const I18N = {
     'results.available': 'свободно',
     'results.taken': 'Занят',
     'results.unknown': 'Не определено',
+    'results.checking': 'Проверяем…',
     'results.buy': 'В корзину',
     'results.perYear': '/год',
     'sort.available': 'По доступности',
@@ -864,6 +888,7 @@ const I18N = {
     'results.available': 'available',
     'results.taken': 'Taken',
     'results.unknown': 'Unknown',
+    'results.checking': 'Checking…',
     'results.buy': 'Add',
     'results.perYear': '/yr',
     'sort.available': 'By availability',
@@ -997,6 +1022,8 @@ async function generate() {
   }
 
   state.loading = true;
+  state.results = [];
+  state.cost = null;
   renderLoading();
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
@@ -1007,8 +1034,17 @@ async function generate() {
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  let scaffoldRendered = false;
+  let receivedAnything = false;
+
+  const ensureScaffold = () => {
+    if (scaffoldRendered) return;
+    renderScaffold();
+    scaffoldRendered = true;
+  };
+
   try {
-    const res = await fetch('/api/generate', {
+    const res = await fetch('/api/generate/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1023,23 +1059,65 @@ async function generate() {
       const errText = await res.text().catch(() => '');
       throw new Error(`API ${res.status}: ${errText.slice(0, 200)}`);
     }
+    if (!res.body) throw new Error('No response body');
 
-    const data = await res.json();
-    if (!data.names || data.names.length === 0) throw new Error('Empty');
+    await consumeSse(res.body, {
+      names: (payload) => {
+        receivedAnything = true;
+        ensureScaffold();
+        const incoming = (payload.names || []).map(n => ({
+          name: n.name,
+          tagline: n.tagline,
+          droppedFullyTaken: false,
+          domains: n.domains.map(d => ({
+            tld: d.tld,
+            domain: d.domain,
+            status: d.status, // 'checking' initially
+            price: priceFor(d.tld),
+          })),
+        }));
+        state.results.push(...incoming);
+        appendNameBlocks(incoming);
+        updateResultsTitle();
+      },
+      domain: (payload) => {
+        const r = findNameByDomain(payload.domain);
+        if (!r) return;
+        const d = r.domains.find(x => x.domain === payload.domain);
+        if (!d) return;
+        d.status = payload.status;
+        patchDomainRow(r, d);
+        updateNameSummary(r);
+        updateResultsTitle();
+      },
+      dropped: (payload) => {
+        const r = state.results.find(x => x.name === payload.name);
+        if (!r) return;
+        r.droppedFullyTaken = true;
+        const block = document.querySelector(`.name-block[data-name-key="${cssEscape(r.name.toLowerCase())}"]`);
+        if (block) block.classList.add('fully-taken');
+      },
+      cost: (payload) => {
+        state.cost = payload;
+        updateCostLine();
+      },
+      error: (payload) => {
+        throw new Error(payload.detail || 'stream error');
+      },
+      done: (payload) => {
+        if (payload && payload.cost) {
+          state.cost = payload.cost;
+          updateCostLine();
+        }
+        // Re-apply sort once everything has resolved — during streaming we
+        // keep insertion order so checks visibly fill in without jumping.
+        if (state.sort === 'available' || state.sort === 'short') {
+          renderNameList();
+        }
+      },
+    });
 
-    state.results = data.names.map(n => ({
-      name: n.name,
-      tagline: n.tagline,
-      domains: n.domains.map(d => ({
-        tld: d.tld,
-        domain: d.domain,
-        status: d.status,
-        price: priceFor(d.tld),
-      })),
-    }));
-    state.cost = data.cost || null;
-
-    renderResults();
+    if (!receivedAnything) throw new Error('Empty stream');
   } catch (err) {
     console.error(err);
     renderError(err.message);
@@ -1048,6 +1126,62 @@ async function generate() {
     btn.disabled = false;
     btn.classList.remove('btn-loading');
   }
+}
+
+async function consumeSse(body, handlers) {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  let event = '';
+  let data = '';
+
+  const dispatch = () => {
+    if (!event) { data = ''; return; }
+    let payload = null;
+    try { payload = data ? JSON.parse(data) : {}; } catch (e) {
+      console.warn('SSE bad JSON:', data);
+    }
+    const h = handlers[event];
+    event = ''; data = '';
+    if (h) h(payload);
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) {
+      // Flush trailing event if buffer ends without blank line.
+      if (event) dispatch();
+      break;
+    }
+    buf += decoder.decode(value, { stream: true });
+
+    let nlIdx;
+    while ((nlIdx = buf.indexOf('\n')) !== -1) {
+      const line = buf.slice(0, nlIdx).replace(/\r$/, '');
+      buf = buf.slice(nlIdx + 1);
+
+      if (line === '') {
+        dispatch();
+      } else if (line.startsWith('event:')) {
+        event = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        data += line.slice(5).trimStart();
+      }
+      // ignore comments (lines starting with ':') and other fields
+    }
+  }
+}
+
+function findNameByDomain(domain) {
+  for (const r of state.results) {
+    if (r.domains.some(d => d.domain === domain)) return r;
+  }
+  return null;
+}
+
+function cssEscape(s) {
+  if (window.CSS && CSS.escape) return CSS.escape(s);
+  return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
 }
 
 function priceFor(tld) {
@@ -1092,21 +1226,14 @@ function renderError(detail) {
 }
 
 function renderResults() {
-  let results = [...state.results];
-  results.forEach(r => r.domains.forEach(d => d.price = priceFor(d.tld)));
+  renderScaffold();
+  renderNameList();
+}
 
-  if (state.sort === 'available') {
-    results.sort((a, b) => b.domains.filter(d => d.status === 'available').length - a.domains.filter(d => d.status === 'available').length);
-  } else if (state.sort === 'short') {
-    results.sort((a, b) => a.name.length - b.name.length);
-  }
-  const totalAvail = results.reduce((s, r) => s + r.domains.filter(d => d.status === 'available').length, 0);
-
+function renderScaffold() {
   const html = `
     <div class="results-header">
-      <div class="results-title">
-        ${t('results.found')} <b>${results.length}</b> ${t('results.names')} ${t('results.sep')} <b>${totalAvail}</b> ${t('results.free')}
-      </div>
+      <div class="results-title" id="resultsTitle"></div>
       <div class="results-actions">
         <select class="sort-select" id="sortSelect">
           <option value="available" ${state.sort === 'available' ? 'selected' : ''}>${t('sort.available')}</option>
@@ -1115,31 +1242,81 @@ function renderResults() {
         </select>
       </div>
     </div>
-    ${renderCost()}
-    <div class="name-list">
-      ${results.map((r, i) => renderBlock(r, i)).join('')}
-    </div>`;
-
+    <div id="costLine"></div>
+    <div class="name-list" id="nameList"></div>`;
   document.getElementById('resultsArea').innerHTML = html;
-
   document.getElementById('sortSelect').addEventListener('change', (e) => {
     state.sort = e.target.value;
-    renderResults();
+    renderNameList();
   });
-  document.querySelectorAll('.buy-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      alert(t('alert.buy') + btn.dataset.domain);
-    });
-  });
+  updateResultsTitle();
+  updateCostLine();
 }
 
-function renderCost() {
+function renderNameList() {
+  let results = [...state.results];
+  results.forEach(r => r.domains.forEach(d => d.price = priceFor(d.tld)));
+  if (state.sort === 'available') {
+    results.sort((a, b) => availableCount(b) - availableCount(a));
+  } else if (state.sort === 'short') {
+    results.sort((a, b) => a.name.length - b.name.length);
+  }
+  const list = document.getElementById('nameList');
+  if (!list) return;
+  list.innerHTML = results.map(r => renderBlock(r)).join('');
+  wireBuyButtons(list);
+}
+
+function appendNameBlocks(newNames) {
+  const list = document.getElementById('nameList');
+  if (!list) return;
+  // When sorted, a fresh re-render guarantees correct order; otherwise just
+  // append the new blocks to preserve previously-rendered DOM (and the
+  // in-place patches we've applied to it).
+  if (state.sort === 'available' || state.sort === 'short') {
+    renderNameList();
+    return;
+  }
+  list.insertAdjacentHTML('beforeend', newNames.map(r => renderBlock(r)).join(''));
+  wireBuyButtons(list);
+}
+
+function patchDomainRow(r, d) {
+  const row = document.querySelector(`.domain-row[data-domain="${cssEscape(d.domain)}"]`);
+  if (!row) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = renderDomain(r.name, d).trim();
+  const next = tmp.firstElementChild;
+  row.replaceWith(next);
+  wireBuyButtons(next);
+}
+
+function updateNameSummary(r) {
+  const block = document.querySelector(`.name-block[data-name-key="${cssEscape(r.name.toLowerCase())}"]`);
+  if (!block) return;
+  const span = block.querySelector('.availability-summary .count');
+  if (span) span.textContent = availableCount(r);
+}
+
+function updateResultsTitle() {
+  const el = document.getElementById('resultsTitle');
+  if (!el) return;
+  const total = state.results.length;
+  const free = state.results.reduce((s, r) => s + availableCount(r), 0);
+  el.innerHTML = `${t('results.found')} <b>${total}</b> ${t('results.names')} ${t('results.sep')} <b>${free}</b> ${t('results.free')}`;
+}
+
+function updateCostLine() {
+  const el = document.getElementById('costLine');
+  if (!el) return;
   const c = state.cost;
-  if (!c) return '';
+  if (!c) {
+    el.outerHTML = '<div id="costLine"></div>';
+    return;
+  }
   const usd = '$' + Number(c.total_usd).toFixed(6);
-  return `
-    <div class="cost-line">
+  el.outerHTML = `
+    <div class="cost-line" id="costLine">
       <span>${t('cost.label')}: <b>${usd}</b></span>
       <span>${t('cost.input')} <b>${c.input_tokens}</b> ${t('cost.tokens')}</span>
       ${c.cached_tokens ? `<span>${t('cost.cached')} <b>${c.cached_tokens}</b> ${t('cost.tokens')}</span>` : ''}
@@ -1148,14 +1325,30 @@ function renderCost() {
     </div>`;
 }
 
-function renderBlock(r, i) {
-  const availableCount = r.domains.filter(d => d.status === 'available').length;
+function availableCount(r) {
+  return r.domains.filter(d => d.status === 'available').length;
+}
+
+function wireBuyButtons(root) {
+  root.querySelectorAll('.buy-btn').forEach(btn => {
+    if (btn.dataset.wired === '1') return;
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      alert(t('alert.buy') + btn.dataset.domain);
+    });
+  });
+}
+
+function renderBlock(r) {
+  const key = r.name.toLowerCase();
+  const cls = 'name-block' + (r.droppedFullyTaken ? ' fully-taken' : '');
   return `
-    <div class="name-block" data-i="${i}">
+    <div class="${cls}" data-name-key="${esc(key)}">
       <div class="name-header">
         <div class="name-title">${esc(r.name)}</div>
         <div class="availability-summary">
-          <span class="count">${availableCount}</span>
+          <span class="count">${availableCount(r)}</span>
           <span>${t('results.outof')} ${r.domains.length} ${t('results.available')}</span>
         </div>
       </div>
@@ -1176,6 +1369,11 @@ function renderDomain(name, d) {
                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                ${t('results.taken')}
              </span>`;
+  } else if (d.status === 'checking') {
+    action = `<span class="checking-label">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity="0.25"/><path d="M21 12a9 9 0 0 1-9 9"/></svg>
+               ${t('results.checking')}
+             </span>`;
   } else {
     action = `<span class="unknown-label">
                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -1183,7 +1381,7 @@ function renderDomain(name, d) {
              </span>`;
   }
   return `
-    <div class="domain-row ${d.status}">
+    <div class="domain-row ${d.status}" data-domain="${esc(lower + d.tld)}">
       <span class="domain-name">${esc(lower)}<span class="tld">${d.tld}</span></span>
       <div class="domain-action">${action}</div>
     </div>`;
